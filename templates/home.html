@@ -1,9 +1,9 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1>Welcome to My Chatbot</h1>
-    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nunc id gravida ultricies, odio tortor vehicula arcu, in feugiat purus dui non felis.</p>
-    <!-- Add more content about your chatbot here -->
+<div class="container d-flex flex-column justify-content-center align-items-center mt-5">
+    <h1 class="mb-4">کیا آپ کے پاس لائیو سٹاک فارمنگ کے بارے میں سوالات ہیں؟</h1>
+    <h3 class="text-right" style="color: #626262;">لائیو سٹاک فارمنگ سے متعلق کوئی بھی سوال پوچھیں چاہے اس کا تعلق جانوروں کی صحت، جانوروں کی فلاح و بہبود یا کاروبار کے معاشی پہلو سے ہو۔ ہمارا چیٹ بوٹ آپ کے سوالات کا جواب دینے کے لئے تیار ہے۔</h3>
+    <a href="{{ url_for('signin') }}" class="btn btn-lg btn-info px-5">سوال پوچھیں</a>
 </div>
 {% endblock %}

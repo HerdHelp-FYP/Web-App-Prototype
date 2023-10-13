@@ -1,0 +1,34 @@
+body {
+    background-color: #626262;
+    color: white;
+}
+.navbar {
+    background-color: #4df9da;
+}
+.navbar-brand {
+    color: white;
+    font-weight: bold;
+}
+.navbar-nav {
+    margin-left: auto;
+}
+.navbar-nav .nav-link {
+    color: white;
+    margin: 0 15px;
+}
+.content {
+    background-color: #2c2c2c;
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+.alert {
+    background-color: #4df9da;
+    color: #2c2c2c;
+}
+footer {
+    text-align: center;
+    color: white;
+    margin-top: 20px;
+}

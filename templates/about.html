@@ -1,35 +1,46 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1>About Us</h1>
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img src="https://via.placeholder.com/150" class="card-img-top" alt="Team Member 1">
-                <div class="card-body">
-                    <h5 class="card-title">Your Name</h5>
-                    <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                </div>
-            </div>
+<div class="container mt-5 text-right">
+    <h1 class="mb-5 text-center">ہمارے بارے میں</h1>
+
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-2">
+            <img src="icon-url" class="img-fluid" alt="Icon 1">
         </div>
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img src="https://via.placeholder.com/150" class="card-img-top" alt="Team Member 2">
-                <div class="card-body">
-                    <h5 class="card-title">Teammate 1's Name</h5>
-                    <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                </div>
-            </div>
+        <div class="col-md-2">
+            <img src="icon-url" class="img-fluid" alt="Icon 2">
         </div>
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <img src="https://via.placeholder.com/150" class="card-img-top" alt="Team Member 3">
-                <div class="card-body">
-                    <h5 class="card-title">Teammate 2's Name</h5>
-                    <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                </div>
-            </div>
+        <div class="col-md-2">
+            <img src="icon-url" class="img-fluid" alt="Icon 3">
+        </div>
+        <div class="col-md-2">
+            <img src="icon-url" class="img-fluid" alt="Icon 4">
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <img src="{{ url_for('static', filename='images/aboutus.webp') }}" class="img-fluid" alt="Team Member 1">
+        </div>
+        <div class="col-md-6">
+            <h2>ہماری مشروعیت</h2>
+            <p>
+                یہ منصوبہ ایک ایسی ایپ کو بنانے کی تصور کرتا ہے جو چارے پالنے والے کسانوں کو ان کے گایے باکڑے کی دیکھ بھال اور معاشرتی سوالات کے لئے مدد فراہم کرنے میں مدد فراہم کرتا ہے، چاہے یہ معاشی فعالیتوں کی پہلی بار ہو یا جانوروں کی صحت سے متعلق مسائل ہوں۔ اس کے صارف دوستانہ انٹرفیس کے ذریعے متن یا اردو بولنے میں دخلوں کو قبول کرے گا، جو ڈیری فارمر کو اپنے دنیاوی چیلنجز کو فعالی سے بیان کرنے میں مدد فراہم کرتا ہے۔
+            </p>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <h2>ہمارا وژن</h2>
+            <p>
+                یہ نظام صارف دوست اور مقامی معاونت فراہم کرنے کیلئے تخصیص یافتہ لارج لینگوج ماڈل پر مبنی ہوگا جو چارے پالنے کے متعلق ڈیٹا پر فائن ٹیون ہوگا۔
+                ورودی کو پروسیس کرنے اور جوابات فراہم کرنے کے لئے۔ یہ نظام کو کھلے سوالات کے معاملات میں فوری اور مقامی مدد فراہم کرنے کیلئے بنایا گیا ہے، جو کہ ڈٹھٹ چارے پالنے والے کسانوں کے علم، پیداوار اور عمومی خوشحالی میں اضافہ کرنے کا اہم ہدف ہے۔
+            </p>
+        </div>
+        <div class="col-md-6">
+            <img src="{{ url_for('static', filename='images/vision.webp') }}" class="img-fluid" alt="Team Member 2">
         </div>
     </div>
 </div>
