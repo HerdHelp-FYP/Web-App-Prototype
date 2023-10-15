@@ -80,6 +80,7 @@ footer {
   margin: 0;
 }
 
-input[type="text"] {
-    width: 70%;
-  }
+.card .card-img-top {
+  max-height: 300px; /* Adjust the value as per your requirement */
+  object-fit: cover;
+}

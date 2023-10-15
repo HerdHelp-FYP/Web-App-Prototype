@@ -1,9 +1,19 @@
 {% extends 'layout.html' %}
 
 {% block content %}
+<!-- File: home.html -->
 <div class="container d-flex flex-column justify-content-center align-items-center mt-5">
-    <h1 class="mb-4">کیا آپ کے پاس لائیو سٹاک فارمنگ کے بارے میں سوالات ہیں؟</h1>
-    <h3 class="text-right" style="color: #626262;">لائیو سٹاک فارمنگ سے متعلق کوئی بھی سوال پوچھیں چاہے اس کا تعلق جانوروں کی صحت، جانوروں کی فلاح و بہبود یا کاروبار کے معاشی پہلو سے ہو۔ ہمارا چیٹ بوٹ آپ کے سوالات کا جواب دینے کے لئے تیار ہے۔</h3>
-    <a href="{{ url_for('signin') }}" class="btn btn-lg btn-info px-5">سوال پوچھیں</a>
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Image goes here -->
+            <img src="{{ url_for('static', filename='images/dairy.jpg') }}" alt="Your Image" class="img-fluid">
+        </div>
+        <div class="col-md-6">
+            <!-- Code implementation for the home page -->
+            <h1 class="mb-4">کیا آپ کے پاس لائیو سٹاک فارمنگ کے بارے میں سوالات ہیں؟</h1>
+            <h3 class="text-right" style="color: #626262;">لائیو سٹاک فارمنگ سے متعلق کوئی بھی سوال پوچھیں چاہے اس کا تعلق جانوروں کی صحت، جانوروں کی فلاح و بہبود یا کاروبار کے معاشی پہلو سے ہو۔ ہمارا چیٹ بوٹ آپ کے سوالات کا جواب دینے کے لئے تیار ہے۔</h3>
+            <a href="{{ url_for('signin') }}" class="btn btn-lg btn-info px-5">سوال پوچھیں</a>
+        </div>
+    </div>
 </div>
 {% endblock %}

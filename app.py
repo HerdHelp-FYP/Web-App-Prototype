@@ -41,6 +41,11 @@ def how_to_use():
 
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
+    """
+    Handles user sign-in. 
+    If the request method is POST, verifies user credentials and redirects accordingly.
+    If the request method is GET, renders the sign-in form.
+    """
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -72,7 +77,7 @@ def chat():
         
         # Here, you should use your NLP model to generate a response based on the prompt.
         # For now, I'll provide a hardcoded response.
-        response = "This is a hardcoded response. Your NLP model will generate the actual response."
+        response = "آپ کی گائے کے علاج میں اینٹی بائیوٹکس اور خون کی منتقلی شامل ہے."
         
         # Save the prompt and response to the database
         conn = create_connection()
