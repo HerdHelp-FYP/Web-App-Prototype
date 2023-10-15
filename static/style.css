@@ -32,3 +32,54 @@ footer {
     color: white;
     margin-top: 20px;
 }
+
+.chat-history {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+
+  .prompt-container {
+    background-color: #4df9da;
+    color: #000;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 10px;
+    align-self: flex-end;
+  }
+  
+  .response-container {
+    background-color: #626262;
+    color: #fff;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 10px;
+    align-self: flex-start;
+  }
+
+  .prompt-container,
+.response-container {
+    width: auto;
+}
+
+.prompt-container,
+.response-container {
+    margin: 0 auto;
+}
+
+.prompt-container,
+.response-container {
+  display: inline-block;
+}
+
+
+  .prompt,
+.response {
+  margin: 0;
+}
+
+input[type="text"] {
+    width: 70%;
+  }

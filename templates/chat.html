@@ -1,0 +1,27 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+
+            <div class="chat-history">
+
+                {% for prompt, response in chat_history %}
+                    
+                        <div class="prompt-container" style="background-color: #4df9da; color: #000; float: right; text-align: center; border-radius: 10px;">
+                                <div class="prompt">{{ prompt }}</div>
+                        </div>
+                        <div class="response-container" style="background-color: #626262; color: #fff; float: left; text-align: center; border-radius: 10px;">
+                            <div class="response">{{ response }}</div>
+                        </div>
+                    
+                {% endfor %}
+
+            </div>
+
+            <form method="post" action="{{ url_for('chat') }}" style="display: flex; position: fixed; align-items: center; justify-content: center; z-index: 10; bottom: 0; left: 0; width: 100%;">
+                <input type="text" class="form-control mb-2" name="prompt" style="width: 70%; margin-right: 10px; color: #000; border: 1px solid #000;" placeholder="Type your message...">
+                <button type="submit" class="btn btn-primary" style="background-color: #4df9da; color: #000; border: 1px solid #000;">Send</button>
+            </form>
+
+
+{% endblock %}
