@@ -1,7 +1,3 @@
-body {
-    background-color: #626262;
-    color: white;
-}
 .navbar {
     background-color: #4df9da;
 }
@@ -16,21 +12,11 @@ body {
     color: white;
     margin: 0 15px;
 }
-.content {
+
+body {
     background-color: #2c2c2c;
     color: white;
-    padding: 20px;
-    border-radius: 10px;
-    margin-top: 20px;
-}
-.alert {
-    background-color: #4df9da;
-    color: #2c2c2c;
-}
-footer {
-    text-align: center;
-    color: white;
-    margin-top: 20px;
+    margin: 0;
 }
 
 .chat-current {
@@ -38,31 +24,32 @@ footer {
     flex-direction: column;
     align-items: flex-start;
     width: 100%;
-  }
+}
 
-
-  .prompt-container {
+.prompt-container {
     background-color: #4df9da;
     color: #000;
     border-radius: 10px;
     padding: 10px;
     margin: 10px;
-    align-self: flex-end;
-  }
-  
-  .response-container {
-    background-color: #2c2c2c;
-    color: #000;
+    width: 100%; /* Set width to 100% */
+    box-sizing: border-box; /* Include padding and border in width */
+}
+
+.response-container {
+    background-color: #626262;
+    color: #fff;
     border-radius: 10px;
     padding: 10px;
     margin: 10px;
-    align-self: flex-start;
-  }
+    width: 100%; /* Set width to 100% */
+    box-sizing: border-box; /* Include padding and border in width */
+}
 
-  .prompt-container,
+/*.prompt-container,
 .response-container {
     width: auto;
-}
+}*/
 
 .prompt-container,
 .response-container {
@@ -71,16 +58,23 @@ footer {
 
 .prompt-container,
 .response-container {
-  display: inline-block;
+    display: inline-block;
 }
 
-
-  .prompt,
+.prompt,
 .response {
-  margin: 0;
+    margin: 0;
 }
 
-.card .card-img-top {
-  max-height: 300px; /* Adjust the value as per your requirement */
-  object-fit: cover;
+.form-control {
+    width: 70%;
+    margin-right: 10px;
+    color: #000;
+    border: 1px solid #000;
+}
+
+.btn-primary {
+    background-color: #4df9da;
+    color: #000;
+    border: 1px solid #000;
 }

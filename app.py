@@ -95,10 +95,18 @@ def chat():
     cursor = conn.cursor()
     user_id = session['user_id']  # Retrieve user ID from the session
     cursor.execute("SELECT prompts.prompt, responses.response FROM prompts JOIN responses ON prompts.id = responses.prompt_id WHERE prompts.user_id = ? ORDER BY prompts.timestamp ASC", (user_id,))
-    chat_history = cursor.fetchall()
+    chat_current = cursor.fetchall()
     conn.close()
     
-    return render_template('chat.html', chat_history=chat_history)
+    return render_template('chat.html', chat_current=chat_current)
+
+@app.route('/logout')
+def logout():
+    # Clear the user_id from the session, effectively logging the user out
+    session.pop('user_id', None)
+    # Redirect to the home page after logout
+    return redirect(url_for('index'))
+
 
 if __name__ == '__main__':
     app.run(debug=True)
