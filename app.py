@@ -1,5 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3
+import requests
+import googletrans
+
+API_URL = "https://api-inference.huggingface.co/models/ahmed807762/flan-t5-base-veterinaryQA_data-v2"
+headers = {"Authorization": "Bearer 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"}
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '1893'  # Replace with a secret key for your app
@@ -70,14 +75,31 @@ def signin():
     
     return render_template('signin.html')
 
+def query(payload):
+	response = requests.post(API_URL, headers=headers, json=payload)
+	return response.json()
+
 @app.route('/chat', methods=['GET', 'POST'])
 def chat():
     if request.method == 'POST':
         prompt = request.form['prompt']
+        print("Prompt from user: ", prompt)
         
-        # Here, you should use your NLP model to generate a response based on the prompt.
-        # For now, I'll provide a hardcoded response.
-        response = "آپ کی گائے کے علاج میں اینٹی بائیوٹکس اور خون کی منتقلی شامل ہے."
+        Translator= googletrans.Translator()
+        translation = Translator.translate(prompt, src='ur', dest='en')
+        prompttr = translation.text
+        print("Prompt after translation: ", prompttr)
+        
+        output = query({
+            "inputs": "question: " +prompttr+ "? answer: ",
+            "parameters": {"max_new_tokens": 250, "repetition_penalty": 7.0},
+            "options": {"wait_for_model": True}
+        })
+        print("Output from model: ", output)
+        
+        translation = Translator.translate(output[0]['generated_text'], src='en', dest='ur')
+        response = translation.text
+        print("Response after translation: ", response)
         
         # Save the prompt and response to the database
         conn = create_connection()
