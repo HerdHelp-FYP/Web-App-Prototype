@@ -156,37 +156,38 @@ def upload_audio():
     temp_flac_path = os.path.join(tempfile.gettempdir(), 'useraudio.flac')
     audio_file.save(temp_flac_path)
 
-    print("before query")
-    # Perform the inference using the query function
-    prompt = query1(temp_flac_path)
-    # Read the entire audio file into memory
-    #audio_data = audio_file.read()
-    #print("audio data = ", audio_data)
+    translation_success = False
+    while not translation_success:
+        print("before query")
+        # Perform the inference using the query function
+        prompt = query1(temp_flac_path)
+        print("after query")
+        print("promptdict = ", prompt)
+        prompt = prompt.get('text')
+        print("prompt = ", prompt)
 
-    # Perform the inference using the query function
-    #prompt = query2(BytesIO(audio_data))
+        try:
+            # Perform translation if needed
+            Translator= googletrans.Translator()
+            translation = Translator.translate(prompt, src='ur', dest='en')
+            prompttr = translation.text
+            print("Prompt after translation: ", prompttr)
 
-    print("after query")
-    print("promptdict = ", prompt)
-    prompt = prompt.get('text')
-    print("prompt = ", prompt)
-    # Perform translation if needed
-    Translator= googletrans.Translator()
-    translation = Translator.translate(prompt, src='ur', dest='en')
-    prompttr = translation.text
-    print("Prompt after translation: ", prompttr)
+            output = query({
+                "inputs": "question: " + prompttr + "? answer: ",
+                "parameters": {"max_new_tokens": 250, "repetition_penalty": 7.0},
+                "options": {"wait_for_model": True}
+            })
+            print("Output from model: ", output)
 
-    output = query({
-        "inputs": "question: " + prompttr + "? answer: ",
-        "parameters": {"max_new_tokens": 250, "repetition_penalty": 7.0},
-        "options": {"wait_for_model": True}
-    })
-    print("Output from model: ", output)
-
-    Translator = googletrans.Translator()
-    translation = Translator.translate(output[0]['generated_text'], src='en', dest='ur')
-    response = translation.text
-    print("Response after translation: ", response)
+            Translator = googletrans.Translator()
+            translation = Translator.translate(output[0]['generated_text'], src='en', dest='ur')
+            response = translation.text
+            print("Response after translation: ", response)
+            translation_success = True  # Translation succeeded, exit loop
+        except TypeError as e:
+            print("Translation failed:", e)
+            print("Retrying translation.")
 
     # Save the prompt and response to the database
     conn = create_connection()
@@ -215,6 +216,7 @@ def upload_audio():
     conn.close()
 
     return render_template('chat.html', chat_current=chat_current)
+
 
 @app.route('/logout')
 def logout():

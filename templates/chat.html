@@ -18,8 +18,11 @@
 <script>
     var rec;
     var audioChunks = [];
-
+    
     function startRecording() {
+        // Disable the 'Record' button
+        document.getElementById('recordButton').disabled = true;
+
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 rec = new MediaRecorder(stream);
@@ -30,16 +33,23 @@
 
                     // Now you can send the audioBlob to the server using AJAX or Fetch
                     sendAudioToServer(audioBlob);
+
+                    // Enable the 'Record' button after the recording is complete
+                    document.getElementById('recordButton').disabled = false;
                 };
                 rec.start();
             })
-            .catch(console.error);
+            .catch(error => {
+                console.error('Error accessing microphone:', error);
+                // Enable the 'Record' button in case of error
+                document.getElementById('recordButton').disabled = false;
+            });
     }
 
     function stopRecording() {
         rec.stop();
-        // Add a delay to ensure that the 'stop' event is properly handled
-        setTimeout(() => rec.onstop(), 100);
+        // No need for setTimeout, call rec.onstop directly
+        rec.onstop();
     }
 
     // Add an event listener for the 'stop' button
@@ -57,6 +67,7 @@
         })
     }
 </script>
+
 </head>
 
 <body>
@@ -107,7 +118,7 @@
 
         <form method="post" action="{{ url_for('chat') }}" style="display: flex; position: fixed; align-items: center; justify-content: center; z-index: 10; bottom: 0; left: 0; width: 100%;">
             <input type="text" class="form-control mb-2" id="prompt" name="prompt" style="width: 70%; margin-right: 10px; color: #000; border: 1px solid #000;" placeholder="Type your message...">
-            <button type="button" onclick="startRecording()" class="btn btn-primary" style="background-color: #4df9da; color: #000; border: 1px solid #000;">Record</button>
+            <button id="recordButton" type="button" onclick="startRecording()" class="btn btn-primary" style="background-color: #4df9da; color: #000; border: 1px solid #000;">Record</button>
             <button id="stopButton" type="button" onclick="stopRecording()" class="btn btn-danger" style="background-color: #ff6347; color: #fff; border: 1px solid #fff;">Stop</button>
         </form>
     </div>
