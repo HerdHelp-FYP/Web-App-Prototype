@@ -218,6 +218,21 @@ def upload_audio():
 
     return render_template('chat.html', chat_current=chat_current)
 
+@app.route('/fetch_chat')
+def fetch_chat():
+    # Fetch chat history from the database
+    conn = create_connection()
+    cursor = conn.cursor()
+    user_id = session['user_id']
+    cursor.execute(
+        "SELECT prompts.prompt, responses.response FROM prompts JOIN responses ON prompts.id = responses.prompt_id WHERE prompts.user_id = ? ORDER BY prompts.timestamp ASC",
+        (user_id,))
+    chat_current = cursor.fetchall()
+    conn.close()
+
+    # Render the chat HTML and send it as JSON
+    chat_html = render_template('partials/chat_partial.html', chat_current=chat_current)
+    return jsonify({'chatHTML': chat_html})
 
 @app.route('/logout')
 def logout():
