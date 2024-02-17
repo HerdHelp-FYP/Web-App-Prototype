@@ -144,49 +144,59 @@ def query2(data):
 
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
-    print("here in upload_audio")
+    request_id = request.headers.get('X-Request-ID', 'No ID')
+    print(f"Processing request {request_id}")
+
     if 'audio' not in request.files:
-        return {'error': 'No audio file provided'}, 400
+        return {'error': 'No audio file provided'},  400
 
     audio_file = request.files['audio']
     print("audio file = ", audio_file)
+    
+    # Assign user_id after checking for the presence of the 'audio' file
+    user_id = session.get('user_id')
+    if user_id is None:
+        return {'error': 'User not authenticated'}, 401
 
-    # Save the audio data as a temporary WAV file
-    print("opening flac file")
-    temp_flac_path = os.path.join(tempfile.gettempdir(), 'useraudio.flac')
+    # Generate a unique filename for the user's audio in the user_audio folder
+    user_audio_folder = os.path.join(os.path.dirname(__file__), 'user_audio')
+    os.makedirs(user_audio_folder, exist_ok=True)  # Create the user_audio folder if it doesn't exist
+    temp_flac_path = os.path.join(user_audio_folder, f'useraudio_{user_id}.flac')
     audio_file.save(temp_flac_path)
 
-    print("before query")
-    # Perform the inference using the query function
-    prompt = query1(temp_flac_path)
-    # Read the entire audio file into memory
-    #audio_data = audio_file.read()
-    #print("audio data = ", audio_data)
 
-    # Perform the inference using the query function
-    #prompt = query2(BytesIO(audio_data))
+    translation_success = False
+    while not translation_success:
+        print("before query")
+        # Perform the inference using the query function
+        prompt = query1(temp_flac_path)
+        print("after query")
+        print("promptdict = ", prompt)
+        prompt = prompt.get('text')
+        print("prompt = ", prompt)
 
-    print("after query")
-    print("promptdict = ", prompt)
-    prompt = prompt.get('text')
-    print("prompt = ", prompt)
-    # Perform translation if needed
-    Translator= googletrans.Translator()
-    translation = Translator.translate(prompt, src='ur', dest='en')
-    prompttr = translation.text
-    print("Prompt after translation: ", prompttr)
+        try:
+            # Perform translation if needed
+            Translator= googletrans.Translator()
+            translation = Translator.translate(prompt, src='ur', dest='en')
+            prompttr = translation.text
+            print("Prompt after translation: ", prompttr)
 
-    output = query({
-        "inputs": "question: " + prompttr + "? answer: ",
-        "parameters": {"max_new_tokens": 250, "repetition_penalty": 7.0},
-        "options": {"wait_for_model": True}
-    })
-    print("Output from model: ", output)
+            output = query({
+                "inputs": "question: " + prompttr + "? answer: ",
+                "parameters": {"max_new_tokens": 250, "repetition_penalty": 7.0},
+                "options": {"wait_for_model": True}
+            })
+            print("Output from model: ", output)
 
-    Translator = googletrans.Translator()
-    translation = Translator.translate(output[0]['generated_text'], src='en', dest='ur')
-    response = translation.text
-    print("Response after translation: ", response)
+            Translator = googletrans.Translator()
+            translation = Translator.translate(output[0]['generated_text'], src='en', dest='ur')
+            response = translation.text
+            print("Response after translation: ", response)
+            translation_success = True  # Translation succeeded, exit loop
+        except TypeError as e:
+            print("Translation failed:", e)
+            print("Retrying translation.")
 
     # Save the prompt and response to the database
     conn = create_connection()
@@ -215,6 +225,22 @@ def upload_audio():
     conn.close()
 
     return render_template('chat.html', chat_current=chat_current)
+
+@app.route('/fetch_chat')
+def fetch_chat():
+    # Fetch chat history from the database
+    conn = create_connection()
+    cursor = conn.cursor()
+    user_id = session['user_id']
+    cursor.execute(
+        "SELECT prompts.prompt, responses.response FROM prompts JOIN responses ON prompts.id = responses.prompt_id WHERE prompts.user_id = ? ORDER BY prompts.timestamp ASC",
+        (user_id,))
+    chat_current = cursor.fetchall()
+    conn.close()
+
+    # Render the chat HTML and send it as JSON
+    chat_html = render_template('partials/chat_partial.html', chat_current=chat_current)
+    return jsonify({'chatHTML': chat_html})
 
 @app.route('/logout')
 def logout():

@@ -1,0 +1,8 @@
+{% for prompt, response in chat_current %}
+<div class="prompt-container" style="background-color: #4df9da; color: #000; float: right; text-align: center; border-radius: 10px;">
+    <div class="prompt">{{ prompt }}</div>
+</div>
+<div class="response-container" style="float: left; text-align: center; border-radius: 10px;">
+    <div class="response">{{ response }}</div>
+</div>
+{% endfor %}

@@ -18,8 +18,11 @@
 <script>
     var rec;
     var audioChunks = [];
-
+    
     function startRecording() {
+        document.getElementById('recordButton').disabled = true;
+        document.getElementById('stopButton').disabled = false;
+
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 rec = new MediaRecorder(stream);
@@ -27,36 +30,56 @@
                 rec.onstop = () => {
                     const audioBlob = new Blob(audioChunks, { type: 'audio/flac' });
                     const audioUrl = URL.createObjectURL(audioBlob);
-
-                    // Now you can send the audioBlob to the server using AJAX or Fetch
                     sendAudioToServer(audioBlob);
+                    document.getElementById('recordButton').disabled = false;
                 };
                 rec.start();
             })
-            .catch(console.error);
+            .catch(error => {
+                console.error('Error accessing microphone:', error);
+                document.getElementById('recordButton').disabled = false;
+            });
     }
 
     function stopRecording() {
         rec.stop();
-        // Add a delay to ensure that the 'stop' event is properly handled
-        setTimeout(() => rec.onstop(), 100);
     }
 
-    // Add an event listener for the 'stop' button
+    document.getElementById('recordButton').addEventListener('click', startRecording);
     document.getElementById('stopButton').addEventListener('click', stopRecording);
 
     function sendAudioToServer(audioFile) {
-        // Prepare the FormData to send the audio file
         var formData = new FormData();
         formData.append('audio', audioFile);
 
-        // Make a POST request to your Flask server
         fetch('/upload_audio', {
             method: 'POST',
+            headers: {
+                'X-Request-ID': 'unique-request-id'  // Replace with a unique identifier
+            },
             body: formData
         })
+        .then(response => response.text())
+        .then(data => {
+            console.log('Success:', data);
+            // Update the chat interface after successful response
+            updateChatInterface();
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function updateChatInterface() {
+        // Fetch the latest chat history using AJAX
+        fetch('/fetch_chat')
+            .then(response => response.json())
+            .then(data => {
+                // Update the chat container with the latest prompts and responses
+                document.getElementById('chatContainer').innerHTML = data.chatHTML;
+            })
+            .catch(error => console.error('Error fetching chat:', error));
     }
 </script>
+
 </head>
 
 <body>
@@ -94,7 +117,7 @@
     </header>
 
     <div class="container mt-5">
-        <div class="chat-current">
+        <div class="chat-current" id="chatContainer">
             {% for prompt, response in chat_current %}
             <div class="prompt-container" style="background-color: #4df9da; color: #000; float: right; text-align: center; border-radius: 10px;">
                 <div class="prompt">{{ prompt }}</div>
@@ -105,12 +128,17 @@
             {% endfor %}
         </div>
 
-        <form method="post" action="{{ url_for('chat') }}" style="display: flex; position: fixed; align-items: center; justify-content: center; z-index: 10; bottom: 0; left: 0; width: 100%;">
-            <input type="text" class="form-control mb-2" id="prompt" name="prompt" style="width: 70%; margin-right: 10px; color: #000; border: 1px solid #000;" placeholder="Type your message...">
-            <button type="button" onclick="startRecording()" class="btn btn-primary" style="background-color: #4df9da; color: #000; border: 1px solid #000;">Record</button>
-            <button id="stopButton" type="button" onclick="stopRecording()" class="btn btn-danger" style="background-color: #ff6347; color: #fff; border: 1px solid #fff;">Stop</button>
-        </form>
+        <br> <!-- Add this line break -->
+
     </div>
+
+    <br> <!-- Add this line break -->
+
+    <form method="post" action="{{ url_for('chat') }}" style="display: flex; position: fixed; align-items: center; justify-content: center; z-index: 10; bottom: 0; left: 0; width: 100%;">
+        <input type="text" class="form-control mb-2" id="prompt" name="prompt" style="width: 70%; margin-right: 10px; color: #000; border: 1px solid #000;" placeholder="Type your message...">
+        <button id="recordButton" type="button" onclick="startRecording()" class="btn btn-primary" style="background-color: #4df9da; color: #000; border: 1px solid #000;">Record</button>
+        <button id="stopButton" type="button" onclick="stopRecording()" class="btn btn-danger" style="background-color: #ff6347; color: #fff; border: 1px solid #fff;">Stop</button>
+    </form>
 
     <!-- Bootstrap JS and dependencies (make sure you include these at the end of the body for faster loading) -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
