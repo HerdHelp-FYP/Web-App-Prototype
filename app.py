@@ -144,17 +144,18 @@ def query2(data):
 
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
-    print("here in upload_audio")
+    request_id = request.headers.get('X-Request-ID', 'No ID')
+    print(f"Processing request {request_id}")
+
     if 'audio' not in request.files:
-        return {'error': 'No audio file provided'}, 400
+        return {'error': 'No audio file provided'},  400
 
     audio_file = request.files['audio']
     print("audio file = ", audio_file)
 
-    # Save the audio data as a temporary WAV file
-    print("opening flac file")
     temp_flac_path = os.path.join(tempfile.gettempdir(), 'useraudio.flac')
     audio_file.save(temp_flac_path)
+
 
     translation_success = False
     while not translation_success:

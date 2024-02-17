@@ -20,8 +20,8 @@
     var audioChunks = [];
     
     function startRecording() {
-        // Disable the 'Record' button
         document.getElementById('recordButton').disabled = true;
+        document.getElementById('stopButton').disabled = false;
 
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
@@ -30,41 +30,38 @@
                 rec.onstop = () => {
                     const audioBlob = new Blob(audioChunks, { type: 'audio/flac' });
                     const audioUrl = URL.createObjectURL(audioBlob);
-
-                    // Now you can send the audioBlob to the server using AJAX or Fetch
                     sendAudioToServer(audioBlob);
-
-                    // Enable the 'Record' button after the recording is complete
                     document.getElementById('recordButton').disabled = false;
                 };
                 rec.start();
             })
             .catch(error => {
                 console.error('Error accessing microphone:', error);
-                // Enable the 'Record' button in case of error
                 document.getElementById('recordButton').disabled = false;
             });
     }
 
     function stopRecording() {
         rec.stop();
-        // No need for setTimeout, call rec.onstop directly
-        rec.onstop();
     }
 
-    // Add an event listener for the 'stop' button
+    document.getElementById('recordButton').addEventListener('click', startRecording);
     document.getElementById('stopButton').addEventListener('click', stopRecording);
 
     function sendAudioToServer(audioFile) {
-        // Prepare the FormData to send the audio file
         var formData = new FormData();
         formData.append('audio', audioFile);
 
-        // Make a POST request to your Flask server
         fetch('/upload_audio', {
             method: 'POST',
+            headers: {
+                'X-Request-ID': 'unique-request-id'  // Replace with a unique identifier
+            },
             body: formData
         })
+        .then(response => response.text())
+        .then(data => console.log('Success:', data))
+        .catch(error => console.error('Error:', error));
     }
 </script>
 
