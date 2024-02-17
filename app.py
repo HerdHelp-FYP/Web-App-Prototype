@@ -152,8 +152,16 @@ def upload_audio():
 
     audio_file = request.files['audio']
     print("audio file = ", audio_file)
+    
+    # Assign user_id after checking for the presence of the 'audio' file
+    user_id = session.get('user_id')
+    if user_id is None:
+        return {'error': 'User not authenticated'}, 401
 
-    temp_flac_path = os.path.join(tempfile.gettempdir(), 'useraudio.flac')
+    # Generate a unique filename for the user's audio in the user_audio folder
+    user_audio_folder = os.path.join(os.path.dirname(__file__), 'user_audio')
+    os.makedirs(user_audio_folder, exist_ok=True)  # Create the user_audio folder if it doesn't exist
+    temp_flac_path = os.path.join(user_audio_folder, f'useraudio_{user_id}.flac')
     audio_file.save(temp_flac_path)
 
 
