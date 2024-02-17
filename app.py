@@ -6,11 +6,13 @@ import googletrans
 import os
 import soundfile as sf
 import numpy as np
+from io import BytesIO
+from flask import jsonify
 
 API_URL = "https://api-inference.huggingface.co/models/ahmed807762/flan-t5-base-veterinaryQA_data-v2"
 headers = {"Authorization": "Bearer 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"}
 
-API_URL1 = "https://api-inference.huggingface.co/models/ahmed807762/whisper_urdu_tiny"
+API_URL1 = "https://api-inference.huggingface.co/models/ihanif/whisper-medium-urdu"
 headers1 = {"Authorization": "Bearer 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"}
 
 app = Flask(__name__)
@@ -129,18 +131,14 @@ def chat():
     
     return render_template('chat.html', chat_current=chat_current)
 
-def convert_to_flac(temp_wav_path, temp_flac_path):
-    print("wav: ", temp_wav_path)
-    print("flac: ", temp_flac_path)
-    # Read the WAV file
-    data, sample_rate = sf.read(temp_wav_path)
-
-    # Export as FLAC
-    sf.write(temp_flac_path, data, sample_rate, format='FLAC')
-
 def query1(filename):
     with open(filename, "rb") as f:
         data = f.read()
+    response = requests.post(API_URL1, headers=headers1, data=data)
+    return response.json()
+
+def query2(data):
+    data = BytesIO(data.getvalue())  # Convert the Stream to BytesIO
     response = requests.post(API_URL1, headers=headers1, data=data)
     return response.json()
 
@@ -151,19 +149,22 @@ def upload_audio():
         return {'error': 'No audio file provided'}, 400
 
     audio_file = request.files['audio']
+    print("audio file = ", audio_file)
 
     # Save the audio data as a temporary WAV file
     print("opening flac file")
     temp_flac_path = os.path.join(tempfile.gettempdir(), 'useraudio.flac')
     audio_file.save(temp_flac_path)
 
-    # Convert the WAV file to FLAC
-    #temp_flac_path = os.path.join(tempfile.gettempdir(), 'useraudio.flac')
-    #convert_to_flac(temp_wav_path, temp_flac_path)
-
     print("before query")
     # Perform the inference using the query function
     prompt = query1(temp_flac_path)
+    # Read the entire audio file into memory
+    #audio_data = audio_file.read()
+    #print("audio data = ", audio_data)
+
+    # Perform the inference using the query function
+    #prompt = query2(BytesIO(audio_data))
 
     print("after query")
     print("promptdict = ", prompt)
