@@ -133,8 +133,12 @@ def chat():
 
 def query1(filename):
     with open(filename, "rb") as f:
+        print("B4 reading")
         data = f.read()
+        flag = True
+    print("Flag = ", flag)
     response = requests.post(API_URL1, headers=headers1, data=data)
+    print("Response = ", response.json())
     return response.json()
 
 def query2(data):
