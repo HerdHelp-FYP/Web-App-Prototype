@@ -232,8 +232,25 @@ def upload_audio():
             prompttr = translation.text
             print("Prompt after translation: ", prompttr)
 
+             # RAG context retrival
+        
+            quer = prompttr
+            res = vectorstore.similarity_search(
+                quer,  # the search query
+                k=3  # returns top 3 most relevant chunks of text
+            )
+            
+            print("Context result = ", res)
+            
+            concatenated_content = ""
+
+            for document in res:
+                concatenated_content += document.page_content + ' '
+                
+            print("Cleaned context = ", concatenated_content)
+            
             output = query({
-                "inputs": "question: " + prompttr + "? answer: ",
+                 "inputs": "question: " +prompttr+ ". context: "+concatenated_content+" answer: ",
                 "parameters": {"max_new_tokens": 250, "repetition_penalty": 7.0},
                 "options": {"wait_for_model": True}
             })
