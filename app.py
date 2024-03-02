@@ -9,6 +9,39 @@ import numpy as np
 from io import BytesIO
 from flask import jsonify
 
+# RAG Libs
+import pinecone
+from torch import cuda
+from langchain.embeddings.huggingface import HuggingFaceEmbeddings
+from langchain.vectorstores import Pinecone
+
+# RAG Setup
+pinecone.init(
+    api_key=os.environ.get('8827e1fc-4c19-46f2-97b9-c622b5488a3f') or '8827e1fc-4c19-46f2-97b9-c622b5488a3f',
+    environment=os.environ.get('gcp-starter') or 'gcp-starter'
+)
+
+embed_model_id = 'sentence-transformers/all-MiniLM-L6-v2'
+
+device = f'cuda:{cuda.current_device()}' if cuda.is_available() else 'cpu'
+
+embed_model = HuggingFaceEmbeddings(
+    model_name=embed_model_id,
+    model_kwargs={'device': device},
+    encode_kwargs={'device': device, 'batch_size': 50}
+)
+
+index_name = 'herdhelp-rag'
+index = pinecone.Index(index_name)
+
+text_field = 'text'  # field in metadata that contains text content
+
+vectorstore = Pinecone(
+    index, embed_model.embed_query, text_field
+)
+# RAG setup end
+
+
 API_URL = "https://api-inference.huggingface.co/models/ahmed807762/flan-t5-base-veterinaryQA_data-v2"
 headers = {"Authorization": "Bearer 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"}
 
@@ -99,8 +132,25 @@ def chat():
         prompttr = translation.text
         print("Prompt after translation: ", prompttr)
         
-        output = query({
-            "inputs": "question: " +prompttr+ "? answer: ",
+        # RAG context retrival
+        
+        quer = prompttr
+        res = vectorstore.similarity_search(
+            quer,  # the search query
+            k=3  # returns top 3 most relevant chunks of text
+        )
+        
+        print("Context result = ", res)
+        
+        concatenated_content = ""
+
+        for document in res:
+            concatenated_content += document.page_content + ' '
+            
+        print("Cleaned context = ", concatenated_content)
+        
+        output = query({                                
+            "inputs": "question: " +prompttr+ ". context: "+concatenated_content+" answer: ",
             "parameters": {"max_new_tokens": 250, "repetition_penalty": 7.0},
             "options": {"wait_for_model": True}
         })
