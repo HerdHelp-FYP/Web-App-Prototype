@@ -22,6 +22,7 @@ pinecone.init(
 
 embed_model_id = 'sentence-transformers/all-MiniLM-L6-v2'
 
+device = 'cpu'
 
 embed_model = HuggingFaceEmbeddings(
     model_name=embed_model_id,
