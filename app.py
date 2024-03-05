@@ -11,7 +11,6 @@ from flask import jsonify
 
 # RAG Libs
 import pinecone
-from torch import cuda
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain.vectorstores import Pinecone
 
@@ -23,7 +22,6 @@ pinecone.init(
 
 embed_model_id = 'sentence-transformers/all-MiniLM-L6-v2'
 
-device = f'cuda:{cuda.current_device()}' if cuda.is_available() else 'cpu'
 
 embed_model = HuggingFaceEmbeddings(
     model_name=embed_model_id,
