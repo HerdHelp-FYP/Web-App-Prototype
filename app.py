@@ -42,7 +42,7 @@ vectorstore = Pinecone(
 # RAG setup end
 
 
-API_URL = "https://api-inference.huggingface.co/models/ahmed807762/flan-t5-base-veterinaryQA_data-v2"
+API_URL = "https://api-inference.huggingface.co/models/ahmed807762/gemma-2b-vetdataset-finetuned"
 headers = {"Authorization": "Bearer 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"}
 
 API_URL1 = "https://api-inference.huggingface.co/models/ihanif/whisper-medium-urdu"
@@ -127,14 +127,26 @@ def chat():
         prompt = request.form['prompt']
         print("Prompt from user: ", prompt)
         
+        sys_prompt = "آپ پاکستان میں مقیم ویٹرنری کے ماہر ہیں۔ آپ پاکستان میں عام طور پر پائے جانے والے مویشیوں پر توجہ مرکوز کرتے ہوئے جانوروں کی صحت اور تندرستی سے متعلق معلومات اور مشورے فراہم کرنے میں مہارت رکھتے ہیں۔ آپ کی مہارت پاکستان میں لائیو سٹاک کے کاروبار کی حرکیات، سرمایہ کاری کے معاملات اور دیگر متعلقہ پہلوؤں کے بارے میں پوچھ گچھ تک پھیلی ہوئی ہے۔ آپ کا بنیادی مقصد صارفین کو جانوروں کی صحت، لائیو سٹاک فارمنگ کے طریقوں، اور پاکستان میں لائیو سٹاک انڈسٹری کے کاروباری پہلوؤں سے متعلق سوالات کے ساتھ مدد کرنا ہے. اگر کوئی صارف عام موضوعات یا غیر متعلقہ موضوعات کے بارے میں پوچھتا ہے تو براہ مہربانی معافی مانگیں اور جواب دینے سے گریز کریں۔ اب، براہ مہربانی مندرجہ ذیل سوال کا جواب دیں  برائے مہربانی اپنے جواب میں میرا سوال نہ دہرائیں۔ بس میرے سوال کو سمجھیں اور اپنا جواب دیں"
+        
+        user_prompt = prompt
+        prompt = sys_prompt + prompt
+        
+        #complete prompt translation
         Translator= googletrans.Translator()
         translation = Translator.translate(prompt, src='ur', dest='en')
         prompttr = translation.text
+        
+        #User's prompt translation
+        Translator= googletrans.Translator()
+        translation = Translator.translate(user_prompt, src='ur', dest='en')
+        prompttr_user = translation.text
+        
         print("Prompt after translation: ", prompttr)
         
         # RAG context retrival
         
-        quer = prompttr
+        quer = prompttr_user
         res = vectorstore.similarity_search(
             quer,  # the search query
             k=3  # returns top 3 most relevant chunks of text
@@ -165,7 +177,7 @@ def chat():
         cursor = conn.cursor()
         user_id = session['user_id']
         print("User id in chat: ", user_id)
-        cursor.execute("INSERT INTO prompts (user_id, prompt) VALUES (?, ?)", (user_id, prompt))
+        cursor.execute("INSERT INTO prompts (user_id, prompt) VALUES (?, ?)", (user_id, user_prompt))
         prompt_id = cursor.lastrowid
         cursor.execute("INSERT INTO responses (prompt_id, response) VALUES (?, ?)", (prompt_id, response))
         conn.commit()
@@ -225,16 +237,26 @@ def upload_audio():
         prompt = prompt.get('text')
         print("prompt = ", prompt)
 
-        try:
+        try:            
+            sys_prompt = "آپ پاکستان میں مقیم ویٹرنری کے ماہر ہیں۔ آپ پاکستان میں عام طور پر پائے جانے والے مویشیوں پر توجہ مرکوز کرتے ہوئے جانوروں کی صحت اور تندرستی سے متعلق معلومات اور مشورے فراہم کرنے میں مہارت رکھتے ہیں۔ آپ کی مہارت پاکستان میں لائیو سٹاک کے کاروبار کی حرکیات، سرمایہ کاری کے معاملات اور دیگر متعلقہ پہلوؤں کے بارے میں پوچھ گچھ تک پھیلی ہوئی ہے۔ آپ کا بنیادی مقصد صارفین کو جانوروں کی صحت، لائیو سٹاک فارمنگ کے طریقوں، اور پاکستان میں لائیو سٹاک انڈسٹری کے کاروباری پہلوؤں سے متعلق سوالات کے ساتھ مدد کرنا ہے. اگر کوئی صارف عام موضوعات یا غیر متعلقہ موضوعات کے بارے میں پوچھتا ہے تو براہ مہربانی معافی مانگیں اور جواب دینے سے گریز کریں۔ اب، براہ مہربانی مندرجہ ذیل سوال کا جواب دیں  برائے مہربانی اپنے جواب میں میرا سوال نہ دہرائیں۔ بس میرے سوال کو سمجھیں اور اپنا جواب دیں"
+            
+            user_prompt = prompt
+            prompt = sys_prompt + prompt
+            
             # Perform translation if needed
             Translator= googletrans.Translator()
             translation = Translator.translate(prompt, src='ur', dest='en')
             prompttr = translation.text
             print("Prompt after translation: ", prompttr)
+            
+            #User's prompt translation
+            Translator= googletrans.Translator()
+            translation = Translator.translate(user_prompt, src='ur', dest='en')
+            prompttr_user = translation.text
 
              # RAG context retrival
         
-            quer = prompttr
+            quer = prompttr_user
             res = vectorstore.similarity_search(
                 quer,  # the search query
                 k=3  # returns top 3 most relevant chunks of text
@@ -270,7 +292,7 @@ def upload_audio():
     cursor = conn.cursor()
     user_id = session['user_id']
     print("User id in chat: ", user_id)
-    cursor.execute("INSERT INTO prompts (user_id, prompt) VALUES (?, ?)", (user_id, prompt))
+    cursor.execute("INSERT INTO prompts (user_id, prompt) VALUES (?, ?)", (user_id, user_prompt))
     prompt_id = cursor.lastrowid
     cursor.execute("INSERT INTO responses (prompt_id, response) VALUES (?, ?)", (prompt_id, response))
     conn.commit()
