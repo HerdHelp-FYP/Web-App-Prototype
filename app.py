@@ -106,6 +106,7 @@ def signin():
             # Authentication successful
             user_id = user[0]  # Get the user_id from the database result
             session['user_id'] = user_id  # Store the user_id in the session
+            session['just_signed_in'] = True  # Set the session variable to indicate that the user has just signed in
             print("User id in signin: ", session['user_id'])
             conn.close()
             #flash('Login successful!', 'success')
@@ -123,6 +124,14 @@ def query(payload):
 
 @app.route('/chat', methods=['GET', 'POST'])
 def chat():
+    if 'just_signed_in' in session:
+        # Show the loading modal only if the user has just signed in
+        show_loading_modal = True
+        # Remove the session variable after displaying the loading modal
+        session.pop('just_signed_in', None)
+    else:
+        show_loading_modal = False
+    
     if request.method == 'POST':
         prompt = request.form['prompt']
         print("Prompt from user: ", prompt)
@@ -191,7 +200,7 @@ def chat():
     chat_current = cursor.fetchall()
     conn.close()
     
-    return render_template('chat.html', chat_current=chat_current)
+    return render_template('chat.html', chat_current=chat_current, show_loading_modal=show_loading_modal)
 
 def query1(filename):
     with open(filename, "rb") as f:
@@ -203,6 +212,45 @@ def query2(data):
     data = BytesIO(data.getvalue())  # Convert the Stream to BytesIO
     response = requests.post(API_URL1, headers=headers1, data=data)
     return response.json()
+
+@app.route('/load_models')
+def load_models():
+    
+    print("Model loading began")
+    
+    translation_success = False
+    while not translation_success:
+        print("before sample query")
+        # Make the sample audio query
+        audio_response = query1('user_audio/sampleaudio.wav')
+        
+        print("audio response: ", audio_response)
+        
+        try:
+            Translator = googletrans.Translator()
+            translation = Translator.translate(audio_response['text'], src='ur', dest='en')
+            response = translation.text
+            print("Response after translation: ", response)
+            translation_success = True  # Translation succeeded, exit loop
+        except TypeError as e:
+            print("Translation failed:", e)
+            print("Retrying translation.")
+    
+    print("Here is sample audio response: ", audio_response)
+
+    # Make the sample text query
+    text_response = query({
+        "inputs": 'Sample text query',
+        "options": {"wait_for_model": True}
+        })
+    
+    print("Here is sample text response: ", text_response)
+
+    # You can perform any additional tasks here if needed
+    
+    print("Models are loaded successfully")
+
+    return jsonify({'status': 'Models loaded successfully'})
 
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
@@ -313,7 +361,7 @@ def upload_audio():
     chat_current = cursor.fetchall()
     conn.close()
 
-    return render_template('chat.html', chat_current=chat_current)
+    return render_template('chat.html', chat_current=chat_current, show_loading_modal=False)
 
 @app.route('/fetch_chat')
 def fetch_chat():
