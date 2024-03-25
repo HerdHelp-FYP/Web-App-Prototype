@@ -9,7 +9,40 @@ import numpy as np
 from io import BytesIO
 from flask import jsonify
 
-API_URL = "https://api-inference.huggingface.co/models/ahmed807762/flan-t5-base-veterinaryQA_data-v2"
+# RAG Libs
+import pinecone
+from torch import cuda
+from langchain.embeddings.huggingface import HuggingFaceEmbeddings
+from langchain.vectorstores import Pinecone
+
+# RAG Setup
+pinecone.init(
+    api_key=os.environ.get('8827e1fc-4c19-46f2-97b9-c622b5488a3f') or '8827e1fc-4c19-46f2-97b9-c622b5488a3f',
+    environment=os.environ.get('gcp-starter') or 'gcp-starter'
+)
+
+embed_model_id = 'sentence-transformers/all-MiniLM-L6-v2'
+
+device = f'cuda:{cuda.current_device()}' if cuda.is_available() else 'cpu'
+
+embed_model = HuggingFaceEmbeddings(
+    model_name=embed_model_id,
+    model_kwargs={'device': device},
+    encode_kwargs={'device': device, 'batch_size': 50}
+)
+
+index_name = 'herdhelp-rag'
+index = pinecone.Index(index_name)
+
+text_field = 'text'  # field in metadata that contains text content
+
+vectorstore = Pinecone(
+    index, embed_model.embed_query, text_field
+)
+# RAG setup end
+
+
+API_URL = "https://api-inference.huggingface.co/models/ahmed807762/gemma-2b-vetdataset-finetuned"
 headers = {"Authorization": "Bearer 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"}
 
 API_URL1 = "https://api-inference.huggingface.co/models/ihanif/whisper-medium-urdu"
@@ -94,13 +127,42 @@ def chat():
         prompt = request.form['prompt']
         print("Prompt from user: ", prompt)
         
+        sys_prompt = "آپ پاکستان میں مقیم ویٹرنری کے ماہر ہیں۔ آپ پاکستان میں عام طور پر پائے جانے والے مویشیوں پر توجہ مرکوز کرتے ہوئے جانوروں کی صحت اور تندرستی سے متعلق معلومات اور مشورے فراہم کرنے میں مہارت رکھتے ہیں۔ آپ کی مہارت پاکستان میں لائیو سٹاک کے کاروبار کی حرکیات، سرمایہ کاری کے معاملات اور دیگر متعلقہ پہلوؤں کے بارے میں پوچھ گچھ تک پھیلی ہوئی ہے۔ آپ کا بنیادی مقصد صارفین کو جانوروں کی صحت، لائیو سٹاک فارمنگ کے طریقوں، اور پاکستان میں لائیو سٹاک انڈسٹری کے کاروباری پہلوؤں سے متعلق سوالات کے ساتھ مدد کرنا ہے. اگر کوئی صارف عام موضوعات یا غیر متعلقہ موضوعات کے بارے میں پوچھتا ہے تو براہ مہربانی معافی مانگیں اور جواب دینے سے گریز کریں۔ اب، براہ مہربانی مندرجہ ذیل سوال کا جواب دیں  برائے مہربانی اپنے جواب میں میرا سوال نہ دہرائیں۔ بس میرے سوال کو سمجھیں اور اپنا جواب دیں"
+        
+        user_prompt = prompt
+        prompt = sys_prompt + prompt
+        
+        #complete prompt translation
         Translator= googletrans.Translator()
         translation = Translator.translate(prompt, src='ur', dest='en')
         prompttr = translation.text
+        
+        #User's prompt translation
+        Translator= googletrans.Translator()
+        translation = Translator.translate(user_prompt, src='ur', dest='en')
+        prompttr_user = translation.text
+        
         print("Prompt after translation: ", prompttr)
         
-        output = query({
-            "inputs": "question: " +prompttr+ "? answer: ",
+        # RAG context retrival
+        
+        quer = prompttr_user
+        res = vectorstore.similarity_search(
+            quer,  # the search query
+            k=3  # returns top 3 most relevant chunks of text
+        )
+        
+        print("Context result = ", res)
+        
+        concatenated_content = ""
+
+        for document in res:
+            concatenated_content += document.page_content + ' '
+            
+        print("Cleaned context = ", concatenated_content)
+        
+        output = query({                                
+            "inputs": "question: " +prompttr+ ". context: "+concatenated_content+" answer: ",
             "parameters": {"max_new_tokens": 250, "repetition_penalty": 7.0},
             "options": {"wait_for_model": True}
         })
@@ -115,7 +177,7 @@ def chat():
         cursor = conn.cursor()
         user_id = session['user_id']
         print("User id in chat: ", user_id)
-        cursor.execute("INSERT INTO prompts (user_id, prompt) VALUES (?, ?)", (user_id, prompt))
+        cursor.execute("INSERT INTO prompts (user_id, prompt) VALUES (?, ?)", (user_id, user_prompt))
         prompt_id = cursor.lastrowid
         cursor.execute("INSERT INTO responses (prompt_id, response) VALUES (?, ?)", (prompt_id, response))
         conn.commit()
@@ -175,15 +237,42 @@ def upload_audio():
         prompt = prompt.get('text')
         print("prompt = ", prompt)
 
-        try:
+        try:            
+            sys_prompt = "آپ پاکستان میں مقیم ویٹرنری کے ماہر ہیں۔ آپ پاکستان میں عام طور پر پائے جانے والے مویشیوں پر توجہ مرکوز کرتے ہوئے جانوروں کی صحت اور تندرستی سے متعلق معلومات اور مشورے فراہم کرنے میں مہارت رکھتے ہیں۔ آپ کی مہارت پاکستان میں لائیو سٹاک کے کاروبار کی حرکیات، سرمایہ کاری کے معاملات اور دیگر متعلقہ پہلوؤں کے بارے میں پوچھ گچھ تک پھیلی ہوئی ہے۔ آپ کا بنیادی مقصد صارفین کو جانوروں کی صحت، لائیو سٹاک فارمنگ کے طریقوں، اور پاکستان میں لائیو سٹاک انڈسٹری کے کاروباری پہلوؤں سے متعلق سوالات کے ساتھ مدد کرنا ہے. اگر کوئی صارف عام موضوعات یا غیر متعلقہ موضوعات کے بارے میں پوچھتا ہے تو براہ مہربانی معافی مانگیں اور جواب دینے سے گریز کریں۔ اب، براہ مہربانی مندرجہ ذیل سوال کا جواب دیں  برائے مہربانی اپنے جواب میں میرا سوال نہ دہرائیں۔ بس میرے سوال کو سمجھیں اور اپنا جواب دیں"
+            
+            user_prompt = prompt
+            prompt = sys_prompt + prompt
+            
             # Perform translation if needed
             Translator= googletrans.Translator()
             translation = Translator.translate(prompt, src='ur', dest='en')
             prompttr = translation.text
             print("Prompt after translation: ", prompttr)
+            
+            #User's prompt translation
+            Translator= googletrans.Translator()
+            translation = Translator.translate(user_prompt, src='ur', dest='en')
+            prompttr_user = translation.text
 
+             # RAG context retrival
+        
+            quer = prompttr_user
+            res = vectorstore.similarity_search(
+                quer,  # the search query
+                k=3  # returns top 3 most relevant chunks of text
+            )
+            
+            print("Context result = ", res)
+            
+            concatenated_content = ""
+
+            for document in res:
+                concatenated_content += document.page_content + ' '
+                
+            print("Cleaned context = ", concatenated_content)
+            
             output = query({
-                "inputs": "question: " + prompttr + "? answer: ",
+                 "inputs": "question: " +prompttr+ ". context: "+concatenated_content+" answer: ",
                 "parameters": {"max_new_tokens": 250, "repetition_penalty": 7.0},
                 "options": {"wait_for_model": True}
             })
@@ -203,7 +292,7 @@ def upload_audio():
     cursor = conn.cursor()
     user_id = session['user_id']
     print("User id in chat: ", user_id)
-    cursor.execute("INSERT INTO prompts (user_id, prompt) VALUES (?, ?)", (user_id, prompt))
+    cursor.execute("INSERT INTO prompts (user_id, prompt) VALUES (?, ?)", (user_id, user_prompt))
     prompt_id = cursor.lastrowid
     cursor.execute("INSERT INTO responses (prompt_id, response) VALUES (?, ?)", (prompt_id, response))
     conn.commit()
