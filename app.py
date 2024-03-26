@@ -136,10 +136,10 @@ def chat():
         prompt = request.form['prompt']
         print("Prompt from user: ", prompt)
         
-        sys_prompt = "آپ پاکستان میں مقیم ویٹرنری کے ماہر ہیں۔ آپ پاکستان میں عام طور پر پائے جانے والے مویشیوں پر توجہ مرکوز کرتے ہوئے جانوروں کی صحت اور تندرستی سے متعلق معلومات اور مشورے فراہم کرنے میں مہارت رکھتے ہیں۔ آپ کی مہارت پاکستان میں لائیو سٹاک کے کاروبار کی حرکیات، سرمایہ کاری کے معاملات اور دیگر متعلقہ پہلوؤں کے بارے میں پوچھ گچھ تک پھیلی ہوئی ہے۔ آپ کا بنیادی مقصد صارفین کو جانوروں کی صحت، لائیو سٹاک فارمنگ کے طریقوں، اور پاکستان میں لائیو سٹاک انڈسٹری کے کاروباری پہلوؤں سے متعلق سوالات کے ساتھ مدد کرنا ہے. اگر کوئی صارف عام موضوعات یا غیر متعلقہ موضوعات کے بارے میں پوچھتا ہے تو براہ مہربانی معافی مانگیں اور جواب دینے سے گریز کریں۔ اب، براہ مہربانی مندرجہ ذیل سوال کا جواب دیں  برائے مہربانی اپنے جواب میں میرا سوال نہ دہرائیں۔ بس میرے سوال کو سمجھیں اور اپنا جواب دیں"
+        sys_prompt = "As a Pakistani veterinarian, you provide expertise on livestock health and farming, assisting users with relevant queries."
         
         user_prompt = prompt
-        prompt = sys_prompt + prompt
+        prompt =  prompt
         
         #complete prompt translation
         Translator= googletrans.Translator()
@@ -158,7 +158,7 @@ def chat():
         quer = prompttr_user
         res = vectorstore.similarity_search(
             quer,  # the search query
-            k=3  # returns top 3 most relevant chunks of text
+            k=1  # returns top 3 most relevant chunks of text
         )
         
         print("Context result = ", res)
@@ -171,10 +171,11 @@ def chat():
         print("Cleaned context = ", concatenated_content)
         
         output = query({                                
-            "inputs": "question: " +prompttr+ ". context: "+concatenated_content+" answer: ",
+            "inputs": sys_prompt+ " Here is some relevant context: "+concatenated_content+" question: " +prompttr_user+" Now generate answer: ",
             "parameters": {"max_new_tokens": 250, "repetition_penalty": 7.0},
             "options": {"wait_for_model": True}
         })
+        
         print("Output from model: ", output)
         
         translation = Translator.translate(output[0]['generated_text'], src='en', dest='ur')
@@ -224,11 +225,13 @@ def load_models():
         # Make the sample audio query
         audio_response = query1('user_audio/sampleaudio.wav')
         
-        print("audio response: ", audio_response)
+        print("Gonna Try")
         
         try:
+            audio_response = audio_response.get('text')
+            print("audio response: ", audio_response)
             Translator = googletrans.Translator()
-            translation = Translator.translate(audio_response['text'], src='ur', dest='en')
+            translation = Translator.translate(audio_response, src='ur', dest='en')
             response = translation.text
             print("Response after translation: ", response)
             translation_success = True  # Translation succeeded, exit loop

@@ -139,15 +139,17 @@
 
     <!-- Add this code snippet inside the body of your chat.html -->
     {% if show_loading_modal %}
-    <div id="loadingModal" class="modal" style="display: block;">
+    <div id="loadingModal" class="modal" style="display: block; z-index: 1000;">
         <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body text-center">
-            <p>Loading models, please wait...</p>
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <!-- Set the text color to black -->
+                    <p style="color: black;">Loading models, please wait...</p>
+                </div>
             </div>
         </div>
-        </div>
     </div>
+    
     {% endif %}
 
     <div class="container mt-5">
