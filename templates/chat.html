@@ -11,75 +11,6 @@
     <style>
         /* Add any additional styles specific to chat.html here */
     </style>
-    <!-- Add these scripts to your chat.html -->
-    <!-- Add these scripts to your chat.html -->
-<script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/dist/recorder.js"></script>
-<script src="https://cdn.rawgit.com/mattdiamond/Recorderjs/08e7abd9/demo/js/main.js"></script>
-<script>
-    var rec;
-    var audioChunks = [];
-    
-    function startRecording() {
-        document.getElementById('recordButton').disabled = true;
-        document.getElementById('stopButton').disabled = false;
-
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                rec = new MediaRecorder(stream);
-                rec.ondataavailable = e => audioChunks.push(e.data);
-                rec.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/flac' });
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    sendAudioToServer(audioBlob);
-                    document.getElementById('recordButton').disabled = false;
-                };
-                rec.start();
-            })
-            .catch(error => {
-                console.error('Error accessing microphone:', error);
-                document.getElementById('recordButton').disabled = false;
-            });
-    }
-
-    function stopRecording() {
-        rec.stop();
-    }
-
-    document.getElementById('recordButton').addEventListener('click', startRecording);
-    document.getElementById('stopButton').addEventListener('click', stopRecording);
-
-    function sendAudioToServer(audioFile) {
-        var formData = new FormData();
-        formData.append('audio', audioFile);
-
-        fetch('/upload_audio', {
-            method: 'POST',
-            headers: {
-                'X-Request-ID': 'unique-request-id'  // Replace with a unique identifier
-            },
-            body: formData
-        })
-        .then(response => response.text())
-        .then(data => {
-            console.log('Success:', data);
-            // Update the chat interface after successful response
-            updateChatInterface();
-        })
-        .catch(error => console.error('Error:', error));
-    }
-
-    function updateChatInterface() {
-        // Fetch the latest chat history using AJAX
-        fetch('/fetch_chat')
-            .then(response => response.json())
-            .then(data => {
-                // Update the chat container with the latest prompts and responses
-                document.getElementById('chatContainer').innerHTML = data.chatHTML;
-            })
-            .catch(error => console.error('Error fetching chat:', error));
-    }
-</script>
-
 </head>
 
 <body>
@@ -134,16 +65,130 @@
 
     <br> <!-- Add this line break -->
 
-    <form method="post" action="{{ url_for('chat') }}" style="display: flex; position: fixed; align-items: center; justify-content: center; z-index: 10; bottom: 0; left: 0; width: 100%;">
-        <input type="text" class="form-control mb-2" id="prompt" name="prompt" style="width: 70%; margin-right: 10px; color: #000; border: 1px solid #000;" placeholder="Type your message...">
-        <button id="recordButton" type="button" onclick="startRecording()" class="btn btn-primary" style="background-color: #4df9da; color: #000; border: 1px solid #000;">Record</button>
-        <button id="stopButton" type="button" onclick="stopRecording()" class="btn btn-danger" style="background-color: #ff6347; color: #fff; border: 1px solid #fff;">Stop</button>
-    </form>
+<form id="chatForm" onsubmit="return submitForm();" style="display: flex; position: fixed; align-items: center; justify-content: center; z-index: 10; bottom: 0; left: 0; width: 100%;">
+    <input type="text" class="form-control mb-2" id="prompt" name="prompt" style="width: 70%; margin-right: 10px; color: #000; border: 1px solid #000;" placeholder="Type your message...">
+    <button type="submit" class="btn btn-primary" style="background-color: #007bff; color: #fff; border: 1px solid #fff;">Send</button>
+    <button id="recordStopButton" type="button" onclick="toggleRecording()" class="btn btn-primary" style="background-color: #4df9da; color: #000; border: 1px solid #000;">Start Recording</button>
+</form>
+
+    
+    <script>
+        function clearInputField() {
+            document.getElementById('prompt').value = '';
+        }
+    
+        function submitForm() {
+            var formData = new FormData(document.getElementById('chatForm'));
+    
+            fetch('{{ url_for("chat") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log('Success:', data);
+                // Update the chat interface after successful response
+                updateChatInterface();
+                // Clear input field after submission
+                clearInputField();
+            })
+            .catch(error => console.error('Error:', error));
+    
+            // Prevent default form submission behavior
+            return false;
+        }
+    </script>
+    
+    
+    
 
     <!-- Bootstrap JS and dependencies (make sure you include these at the end of the body for faster loading) -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        var rec;
+        var audioChunks = [];
+        var isRecording = false;
+
+        function toggleRecording() {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+            isRecording = !isRecording;
+        }
+
+        function startRecording() {
+            document.getElementById('recordStopButton').innerHTML = 'Stop';
+            document.getElementById('recordStopButton').style.backgroundColor = '#ff6347';
+            document.getElementById('recordStopButton').style.color = '#fff';
+            document.getElementById('recordStopButton').style.borderColor = '#fff';
+
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    rec = new MediaRecorder(stream);
+                    rec.ondataavailable = e => audioChunks.push(e.data);
+                    rec.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/flac' });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        sendAudioToServer(audioBlob);
+                    };
+                    rec.start();
+                })
+                .catch(error => {
+                    console.error('Error accessing microphone:', error);
+                });
+        }
+
+        function stopRecording() {
+            document.getElementById('recordStopButton').innerHTML = 'Start Recording';
+            document.getElementById('recordStopButton').style.backgroundColor = '#4df9da';
+            document.getElementById('recordStopButton').style.color = '#000';
+            document.getElementById('recordStopButton').style.borderColor = '#000';
+
+            rec.stop();
+            audioChunks = [];
+        }
+
+        function sendAudioToServer(audioFile) {
+            var formData = new FormData();
+            formData.append('audio', audioFile);
+
+            fetch('/upload_audio', {
+                method: 'POST',
+                headers: {
+                    'X-Request-ID': 'unique-request-id'  // Replace with a unique identifier
+                },
+                body: formData
+            })
+                .then(response => response.text())
+                .then(data => {
+                    console.log('Success:', data);
+                    // Update the chat interface after successful response
+                    updateChatInterface();
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function updateChatInterface() {
+            // Remember current scroll position
+            var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+        
+            // Fetch the latest chat history using AJAX
+            fetch('/fetch_chat')
+                .then(response => response.json())
+                .then(data => {
+                    // Update the chat container with the latest prompts and responses
+                    document.getElementById('chatContainer').innerHTML = data.chatHTML;
+        
+                    // Restore scroll position
+                    window.scrollTo(0, scrollTop);
+                })
+                .catch(error => console.error('Error fetching chat:', error));
+        }
+    </script>
 </body>
 
 </html>
