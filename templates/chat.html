@@ -8,46 +8,6 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='chat_style.css') }}">
-    <style>
-        /* Add any additional styles specific to chat.html here */
-        /* Animation for chat bubbles */
-        .prompt-container, .response-container {
-            animation: fadeInUp 0.5s ease forwards;
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Additional style for loading overlay */
-        #loadingOverlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-
-        #loadingOverlay .spinner-border {
-            color: #ffffff; /* White color for the spinner */
-        }
-
-        #loadingOverlay .loading-text {
-            color: #ffffff; /* White color for the loading text */
-            margin-top: 10px;
-        }
-    </style>
 </head>
 
 <body>
