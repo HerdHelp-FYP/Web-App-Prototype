@@ -140,6 +140,7 @@
                 startRecording();
             } else {
                 stopRecording();
+                showLoading(); // Show loading overlay when recording is stopped
             }
             isRecording = !isRecording;
         }
@@ -171,11 +172,12 @@
         }
 
         function stopRecording() {
-            document.getElementById('recordStopButton').innerHTML = 'Start Recording';
-            document.getElementById('recordStopButton').style.backgroundColor = '#4df9da';
-            document.getElementById('recordStopButton').style.color = '#000';
-            document.getElementById('recordStopButton').style.borderColor = '#000';
-
+            document.getElementById('recordStopButton').innerHTML = 'Stop';
+            document.getElementById('recordStopButton').classList.add('btn-recording'); // Add class for recording style
+            document.getElementById('recordStopButton').style.backgroundColor = '#ff6347';
+            document.getElementById('recordStopButton').style.color = '#fff';
+            document.getElementById('recordStopButton').style.borderColor = '#fff';
+        
             rec.stop();
             audioChunks = [];
         }
@@ -202,7 +204,7 @@
                     function updateChatInterface() {
                         // Remember current scroll position
                         var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-                
+                    
                         // Fetch the latest chat history using AJAX
                         fetch('/fetch_chat')
                             .then(response => response.json())
@@ -210,11 +212,15 @@
                                 // Update the chat container
                                 // Update the chat container with the latest prompts and responses
                                 document.getElementById('chatContainer').innerHTML = data.chatHTML;
-                
+                    
                                 // Restore scroll position
                                 window.scrollTo(0, scrollTop);
+                    
+                                // Hide loading overlay after response is generated
+                                hideLoading();
                             })
                             .catch(error => console.error('Error fetching chat:', error));
                     }
+                    
                 </script>
                 
