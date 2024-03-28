@@ -8,6 +8,7 @@ import soundfile as sf
 import numpy as np
 from io import BytesIO
 from flask import jsonify
+import re
 
 # RAG Libs
 import pinecone
@@ -170,15 +171,30 @@ def chat():
             
         print("Cleaned context = ", concatenated_content)
         
+        # "inputs": " question: " +prompttr_user+" answer: "
+        # "inputs": sys_prompt+ " Here is some relevant context: "+concatenated_content+" question: " +prompttr_user+" Now generate answer: "
         output = query({                                
-            "inputs": sys_prompt+ " Here is some relevant context: "+concatenated_content+" question: " +prompttr_user+" Now generate answer: ",
+            "inputs": sys_prompt+ " Here is some relevant context, "+concatenated_content+" question " +prompttr_user+" Now generate answer : ",
             "parameters": {"max_new_tokens": 250, "repetition_penalty": 7.0},
             "options": {"wait_for_model": True}
         })
         
-        print("Output from model: ", output)
+        # Assuming 'output' contains the model's response
+        output = output[0]['generated_text']
         
-        translation = Translator.translate(output[0]['generated_text'], src='en', dest='ur')
+        print("Output from model: ", output)   
+
+        # Use regex to find the text after the asterisk (*)
+        match = re.search(r':(.*)', output)
+        
+        if match:
+            output = match.group(1)
+            print("Response after asterisk:", output)
+        
+        print("Output from model after regex: ", output)        
+        
+        
+        translation = Translator.translate(output, src='en', dest='ur')
         response = translation.text
         print("Response after translation: ", response)
         
@@ -228,6 +244,10 @@ def load_models():
         print("Gonna Try")
         
         try:
+            # temporarily
+            # translation_success = True  # Translation succeeded, exit loop
+            # ...
+            print("audio response b4 cleaning: ", audio_response)
             audio_response = audio_response.get('text')
             print("audio response: ", audio_response)
             Translator = googletrans.Translator()
@@ -238,6 +258,7 @@ def load_models():
         except TypeError as e:
             print("Translation failed:", e)
             print("Retrying translation.")
+            print("After Trying")
     
     print("Here is sample audio response: ", audio_response)
 
