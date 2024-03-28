@@ -8,6 +8,7 @@ import soundfile as sf
 import numpy as np
 from io import BytesIO
 from flask import jsonify
+import re
 
 # RAG Libs
 import pinecone
@@ -106,6 +107,7 @@ def signin():
             # Authentication successful
             user_id = user[0]  # Get the user_id from the database result
             session['user_id'] = user_id  # Store the user_id in the session
+            session['just_signed_in'] = True  # Set the session variable to indicate that the user has just signed in
             print("User id in signin: ", session['user_id'])
             conn.close()
             #flash('Login successful!', 'success')
@@ -123,14 +125,22 @@ def query(payload):
 
 @app.route('/chat', methods=['GET', 'POST'])
 def chat():
+    if 'just_signed_in' in session:
+        # Show the loading modal only if the user has just signed in
+        show_loading_modal = True
+        # Remove the session variable after displaying the loading modal
+        session.pop('just_signed_in', None)
+    else:
+        show_loading_modal = False
+    
     if request.method == 'POST':
         prompt = request.form['prompt']
         print("Prompt from user: ", prompt)
         
-        sys_prompt = "آپ پاکستان میں مقیم ویٹرنری کے ماہر ہیں۔ آپ پاکستان میں عام طور پر پائے جانے والے مویشیوں پر توجہ مرکوز کرتے ہوئے جانوروں کی صحت اور تندرستی سے متعلق معلومات اور مشورے فراہم کرنے میں مہارت رکھتے ہیں۔ آپ کی مہارت پاکستان میں لائیو سٹاک کے کاروبار کی حرکیات، سرمایہ کاری کے معاملات اور دیگر متعلقہ پہلوؤں کے بارے میں پوچھ گچھ تک پھیلی ہوئی ہے۔ آپ کا بنیادی مقصد صارفین کو جانوروں کی صحت، لائیو سٹاک فارمنگ کے طریقوں، اور پاکستان میں لائیو سٹاک انڈسٹری کے کاروباری پہلوؤں سے متعلق سوالات کے ساتھ مدد کرنا ہے. اگر کوئی صارف عام موضوعات یا غیر متعلقہ موضوعات کے بارے میں پوچھتا ہے تو براہ مہربانی معافی مانگیں اور جواب دینے سے گریز کریں۔ اب، براہ مہربانی مندرجہ ذیل سوال کا جواب دیں  برائے مہربانی اپنے جواب میں میرا سوال نہ دہرائیں۔ بس میرے سوال کو سمجھیں اور اپنا جواب دیں"
+        sys_prompt = "As a Pakistani veterinarian, you provide expertise on livestock health and farming, assisting users with relevant queries."
         
         user_prompt = prompt
-        prompt = sys_prompt + prompt
+        prompt =  prompt
         
         #complete prompt translation
         Translator= googletrans.Translator()
@@ -149,7 +159,7 @@ def chat():
         quer = prompttr_user
         res = vectorstore.similarity_search(
             quer,  # the search query
-            k=3  # returns top 3 most relevant chunks of text
+            k=1  # returns top 3 most relevant chunks of text
         )
         
         print("Context result = ", res)
@@ -161,14 +171,30 @@ def chat():
             
         print("Cleaned context = ", concatenated_content)
         
+        # "inputs": " question: " +prompttr_user+" answer: "
+        # "inputs": sys_prompt+ " Here is some relevant context: "+concatenated_content+" question: " +prompttr_user+" Now generate answer: "
         output = query({                                
-            "inputs": "question: " +prompttr+ ". context: "+concatenated_content+" answer: ",
+            "inputs": sys_prompt+ " Here is some relevant context, "+concatenated_content+" question " +prompttr_user+" Now generate answer : ",
             "parameters": {"max_new_tokens": 250, "repetition_penalty": 7.0},
             "options": {"wait_for_model": True}
         })
-        print("Output from model: ", output)
         
-        translation = Translator.translate(output[0]['generated_text'], src='en', dest='ur')
+        # Assuming 'output' contains the model's response
+        output = output[0]['generated_text']
+        
+        print("Output from model: ", output)   
+
+        # Use regex to find the text after the asterisk (*)
+        match = re.search(r':(.*)', output)
+        
+        if match:
+            output = match.group(1)
+            print("Response after asterisk:", output)
+        
+        print("Output from model after regex: ", output)        
+        
+        
+        translation = Translator.translate(output, src='en', dest='ur')
         response = translation.text
         print("Response after translation: ", response)
         
@@ -191,7 +217,7 @@ def chat():
     chat_current = cursor.fetchall()
     conn.close()
     
-    return render_template('chat.html', chat_current=chat_current)
+    return render_template('chat.html', chat_current=chat_current, show_loading_modal=show_loading_modal)
 
 def query1(filename):
     with open(filename, "rb") as f:
@@ -203,6 +229,52 @@ def query2(data):
     data = BytesIO(data.getvalue())  # Convert the Stream to BytesIO
     response = requests.post(API_URL1, headers=headers1, data=data)
     return response.json()
+
+@app.route('/load_models')
+def load_models():
+    
+    print("Model loading began")
+    
+    translation_success = False
+    while not translation_success:
+        print("before sample query")
+        # Make the sample audio query
+        audio_response = query1('user_audio/sampleaudio.wav')
+        
+        print("Gonna Try")
+        
+        try:
+            # temporarily
+            # translation_success = True  # Translation succeeded, exit loop
+            # ...
+            print("audio response b4 cleaning: ", audio_response)
+            audio_response = audio_response.get('text')
+            print("audio response: ", audio_response)
+            Translator = googletrans.Translator()
+            translation = Translator.translate(audio_response, src='ur', dest='en')
+            response = translation.text
+            print("Response after translation: ", response)
+            translation_success = True  # Translation succeeded, exit loop
+        except TypeError as e:
+            print("Translation failed:", e)
+            print("Retrying translation.")
+            print("After Trying")
+    
+    print("Here is sample audio response: ", audio_response)
+
+    # Make the sample text query
+    text_response = query({
+        "inputs": 'Sample text query',
+        "options": {"wait_for_model": True}
+        })
+    
+    print("Here is sample text response: ", text_response)
+
+    # You can perform any additional tasks here if needed
+    
+    print("Models are loaded successfully")
+
+    return jsonify({'status': 'Models loaded successfully'})
 
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
@@ -313,7 +385,7 @@ def upload_audio():
     chat_current = cursor.fetchall()
     conn.close()
 
-    return render_template('chat.html', chat_current=chat_current)
+    return render_template('chat.html', chat_current=chat_current, show_loading_modal=False)
 
 @app.route('/fetch_chat')
 def fetch_chat():

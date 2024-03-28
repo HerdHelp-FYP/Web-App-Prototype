@@ -133,3 +133,10 @@ body {
     color: #ffffff; /* White color for the loading text */
     margin-top: 10px;
 }
+
+#loadingModal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
