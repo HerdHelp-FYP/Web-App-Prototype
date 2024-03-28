@@ -84,3 +84,26 @@ footer {
   max-height: 300px; /* Adjust the value as per your requirement */
   object-fit: cover;
 }
+/* Add @font-face declaration here */
+@font-face {
+  font-family: 'Jameel Noori Nastaleeq';
+  src: url('../static/Jameel Noori Nastaleeq Kasheeda.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  /* Adjustments for better rendering */
+  font-smooth: antialiased; /* Smooth edges */
+  -webkit-font-smoothing: antialiased; /* Smooth edges on Chrome */
+  -moz-osx-font-smoothing: grayscale; /* Smooth edges on macOS */
+  text-rendering: optimizeLegibility; /* Improve legibility */
+}
+.urdu-font {
+  font-family: 'Jameel Noori Nastaleeq', sans-serif;
+  /* Add any additional styles specific to the Urdu font */
+  /* font-size: 18px; Example: Increase font size */
+}
+.large-text {
+  font-size: 20px; /* Adjust the font size as needed */
+}
+.very-large-text {
+  font-size: 24px; /* Adjust the font size as needed */
+}
