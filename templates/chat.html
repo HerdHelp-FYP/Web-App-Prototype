@@ -172,11 +172,11 @@
         }
 
         function stopRecording() {
-            document.getElementById('recordStopButton').innerHTML = 'Stop';
+            document.getElementById('recordStopButton').innerHTML = 'Start Recording';
             document.getElementById('recordStopButton').classList.add('btn-recording'); // Add class for recording style
-            document.getElementById('recordStopButton').style.backgroundColor = '#ff6347';
-            document.getElementById('recordStopButton').style.color = '#fff';
-            document.getElementById('recordStopButton').style.borderColor = '#fff';
+            document.getElementById('recordStopButton').style.backgroundColor = '#4df9da';
+            document.getElementById('recordStopButton').style.color = '#000';
+            document.getElementById('recordStopButton').style.border = '1px solid #000';
         
             rec.stop();
             audioChunks = [];
