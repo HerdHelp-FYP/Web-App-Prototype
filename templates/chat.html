@@ -15,6 +15,27 @@
     <!-- Add these scripts to your chat.html -->
 <script import Recorder from 'recorder-js'></script>
 <script>
+    // Show the loading modal when the page loads
+    window.onload = function() {
+        document.getElementById('loadingModal').style.display = 'block';
+    };
+
+    // Make the sample audio and text queries
+    fetch('/load_models')
+        .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to load models');
+        }
+        return response.json();
+        })
+        .then(data => {
+        // Hide the loading modal once the responses are received
+        document.getElementById('loadingModal').style.display = 'none';
+        })
+        .catch(error => {
+        console.error('Error loading models:', error);
+        });
+
     var rec;
     var audioChunks = [];
     
@@ -115,7 +136,23 @@
         </nav>
     </header>
 
+    <!-- Add this code snippet inside the body of your chat.html -->
+    {% if show_loading_modal %}
+    <div id="loadingModal" class="modal" style="display: block; z-index: 1000;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <!-- Set the text color to black -->
+                    <p style="color: black;">ماڈل لوڈ کر رہے ہیں، براہ مہربانی انتظار کریں...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% endif %}
+
     <div class="container mt-5">
+        <!-- Chat container -->
         <div class="chat-current" id="chatContainer">
             {% for prompt, response in chat_current %}
             <div class="prompt-container" style="background-color: #4df9da; color: #000; float: right; text-align: center; border-radius: 10px;">
@@ -126,23 +163,160 @@
             </div>
             {% endfor %}
         </div>
-
         <br> <!-- Add this line break -->
-
     </div>
-
     <br> <!-- Add this line break -->
 
-    <form method="post" action="{{ url_for('chat') }}" style="display: flex; position: fixed; align-items: center; justify-content: center; z-index: 10; bottom: 0; left: 0; width: 100%;">
+    <!-- Chat form -->
+    <form id="chatForm" onsubmit="return submitForm();" class="fixed-bottom w-100 d-flex justify-content-center">
         <input type="text" class="form-control mb-2" id="prompt" name="prompt" style="width: 70%; margin-right: 10px; color: #000; border: 1px solid #000;" placeholder="Type your message...">
-        <button id="recordButton" type="button" onclick="startRecording()" class="btn btn-primary" style="background-color: #4df9da; color: #000; border: 1px solid #000;">Record</button>
-        <button id="stopButton" type="button" onclick="stopRecording()" class="btn btn-danger" style="background-color: #ff6347; color: #fff; border: 1px solid #fff;">Stop</button>
+        <button type="submit" class="btn btn-primary" style="background-color: #007bff; color: #fff; border: 1px solid #fff;" onclick="showLoading()">Send</button>
+        <button id="recordStopButton" type="button" onclick="toggleRecording()" class="btn btn-primary" style="background-color: #4df9da; color: #000; border: 1px solid #000;" onclick="showLoading()">Start Recording</button>
     </form>
 
-    <!-- Bootstrap JS and dependencies (make sure you include these at the end of the body for faster loading) -->
+    <!-- Loading overlay -->
+    <div id="loadingOverlay">
+        <div class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+        <div class="loading-text">براہ مہربانی انتظار کریں، جواب تیار کیا جا رہا ہے.</div>
+    </div>
+
+    <!-- JavaScript -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
+    <script>
+        function clearInputField() {
+            document.getElementById('prompt').value = '';
+        }
 
-</html>
+        function submitForm() {
+            var formData = new FormData(document.getElementById('chatForm'));
+
+            // Show loading overlay
+            showLoading();
+
+            fetch('{{ url_for("chat") }}', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(data => {
+                    console.log('Success:', data);
+                    // Update the chat interface after successful response
+                    updateChatInterface();
+                    // Clear input field after submission
+                    clearInputField();
+                    // Hide loading overlay
+                    hideLoading();
+                })
+                .catch(error => console.error('Error:', error));
+
+            // Prevent default form submission behavior
+            return false;
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+    </script>
+
+    <script>
+        var rec;
+        var audioChunks = [];
+        var isRecording = false;
+
+        function toggleRecording() {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                stopRecording();
+                showLoading(); // Show loading overlay when recording is stopped
+            }
+            isRecording = !isRecording;
+        }
+
+        function startRecording() {
+            document.getElementById('recordStopButton').innerHTML = 'Stop';
+            document.getElementById('recordStopButton').style.backgroundColor = '#ff6347';
+            document.getElementById('recordStopButton').style.color = '#fff';
+            document.getElementById('recordStopButton').style.borderColor = '#fff';
+
+            navigator.mediaDevices.getUserMedia({
+                    audio: true
+                })
+                .then(stream => {
+                    rec = new MediaRecorder(stream);
+                    rec.ondataavailable = e => audioChunks.push(e.data);
+                    rec.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, {
+                            type: 'audio/flac'
+                        });
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        sendAudioToServer(audioBlob);
+                    };
+                    rec.start();
+                })
+                .catch(error => {
+                    console.error('Error accessing microphone:', error);
+                });
+        }
+
+        function stopRecording() {
+            document.getElementById('recordStopButton').innerHTML = 'Start Recording';
+            document.getElementById('recordStopButton').classList.add('btn-recording'); // Add class for recording style
+            document.getElementById('recordStopButton').style.backgroundColor = '#4df9da';
+            document.getElementById('recordStopButton').style.color = '#000';
+            document.getElementById('recordStopButton').style.border = '1px solid #000';
+        
+            rec.stop();
+            audioChunks = [];
+        }
+
+        function sendAudioToServer(audioFile) {
+            var formData = new FormData();
+            formData.append('audio', audioFile);
+
+            fetch('/upload_audio', {
+                    method: 'POST',
+                    headers: {
+                        'X-Request-ID': 'unique-request-id'
+                    }, // Replace with a unique identifier
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(data => {
+                    console.log('Success:', data);
+                    // Update the chat interface after successful response
+                    updateChatInterface();
+                    })
+                    .catch(error => console.error('Error:', error));
+                    }
+                    function updateChatInterface() {
+                        // Remember current scroll position
+                        var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+                    
+                        // Fetch the latest chat history using AJAX
+                        fetch('/fetch_chat')
+                            .then(response => response.json())
+                            .then(data => {
+                                // Update the chat container
+                                // Update the chat container with the latest prompts and responses
+                                document.getElementById('chatContainer').innerHTML = data.chatHTML;
+                    
+                                // Restore scroll position
+                                window.scrollTo(0, scrollTop);
+                    
+                                // Hide loading overlay after response is generated
+                                hideLoading();
+                            })
+                            .catch(error => console.error('Error fetching chat:', error));
+                    }
+                    
+                </script>
+                

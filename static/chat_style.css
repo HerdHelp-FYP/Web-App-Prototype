@@ -64,7 +64,10 @@ body {
 .prompt,
 .response {
     margin: 0;
+    font-family: 'Jameel Noori Nastaleeq', sans-serif; /* Apply the font-family */
+    font-size: 20px; /* Adjust the font size as needed */
 }
+
 
 .form-control {
     width: 70%;
@@ -77,4 +80,63 @@ body {
     background-color: #4df9da;
     color: #000;
     border: 1px solid #000;
+}
+/* chat_styles.css */
+
+/* Add @font-face declaration here */
+@font-face {
+    font-family: 'Jameel Noori Nastaleeq';
+    src: url('../static/Jameel Noori Nastaleeq Kasheeda.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    /* Adjustments for better rendering */
+    font-smooth: antialiased; /* Smooth edges */
+    -webkit-font-smoothing: antialiased; /* Smooth edges on Chrome */
+    -moz-osx-font-smoothing: grayscale; /* Smooth edges on macOS */
+    text-rendering: optimizeLegibility; /* Improve legibility */
+}
+
+/* Add any additional styles specific to chat.html here */
+.prompt-container, .response-container {
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Additional style for loading overlay */
+#loadingOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+#loadingOverlay .spinner-border {
+    color: #ffffff; /* White color for the spinner */
+}
+
+#loadingOverlay .loading-text {
+    color: #ffffff; /* White color for the loading text */
+    margin-top: 10px;
+}
+
+#loadingModal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
