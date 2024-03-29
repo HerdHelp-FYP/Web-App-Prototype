@@ -355,7 +355,7 @@ def upload_audio():
             print("Output from model: ", output)   
 
             # Use regex to find the text after the asterisk (*)
-            match = re.search(r':(.*)', output)
+            match = re.search(r':(.*?)(?:\s*\n(.*))?$', output)
             
             if match:
                 output = match.group(1)
