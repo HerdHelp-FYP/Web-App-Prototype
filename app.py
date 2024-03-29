@@ -9,9 +9,10 @@ import numpy as np
 from io import BytesIO
 from flask import jsonify
 import re
-
+from pyngrok import ngrok
 # RAG Libs
 import pinecone
+from torch import cuda
 from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain.vectorstores import Pinecone
 
@@ -23,7 +24,7 @@ pinecone.init(
 
 embed_model_id = 'sentence-transformers/all-MiniLM-L6-v2'
 
-device = 'cpu'
+device = f'cuda:{cuda.current_device()}' if cuda.is_available() else 'cpu'
 
 embed_model = HuggingFaceEmbeddings(
     model_name=embed_model_id,
@@ -50,7 +51,8 @@ headers1 = {"Authorization": "Bearer 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"}
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '1893'  # Replace with a secret key for your app
-
+ngrok.set_auth_token("2eLs9M149rrFrAEIg3YUozmcs6B_3CJoPMQrHvKKN8xFuy4Yg")
+url = ngrok.connect(5000).public_url
 # This function creates a connection to a database. The database is stored in a file named "herdhelp.db".
 def create_connection():
     return sqlite3.connect('herdhelp.db')
@@ -220,12 +222,8 @@ def chat():
 
 def query1(filename):
     with open(filename, "rb") as f:
-        print("B4 reading")
         data = f.read()
-        flag = True
-    print("Flag = ", flag)
     response = requests.post(API_URL1, headers=headers1, data=data)
-    print("Response = ", response.json())
     return response.json()
 
 def query2(data):
@@ -358,7 +356,7 @@ def upload_audio():
             print("Output from model: ", output)   
 
             # Use regex to find the text after the asterisk (*)
-            match = re.search(r':(.*?)(?:\s*\n(.*))?$', output)
+            match = re.search(r':(.*)', output)
             
             if match:
                 output = match.group(1)
@@ -426,6 +424,7 @@ def logout():
     # Redirect to the home page after logout
     return redirect(url_for('index'))
 
+print(("URL: ", url))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)),debug=True)
+    app.run(debug=True,port=5000)
