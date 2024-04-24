@@ -46,8 +46,17 @@ vectorstore = Pinecone(
 API_URL = "https://api-inference.huggingface.co/models/ahmed807762/gemma-2b-vetdataset-finetuned"
 headers = {"Authorization": "Bearer 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"}
 
-API_URL1 = "https://api-inference.huggingface.co/models/ihanif/whisper-medium-urdu"
-headers1 = {"Authorization": "Bearer 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"}
+# API_URL1 = "https://api-inference.huggingface.co/models/ihanif/whisper-medium-urdu"
+# headers1 = {"Authorization": "Bearer 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"}
+
+# Dedicated
+API_URL1 = "https://p8345i3xkcgeg28h.us-east-1.aws.endpoints.huggingface.cloud"
+headers1 = {
+	"Accept" : "application/json",
+	"Authorization": "Bearer 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",
+	"Content-Type": "audio/flac" 
+}
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '1893'  # Replace with a secret key for your app
