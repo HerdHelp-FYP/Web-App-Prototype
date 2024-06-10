@@ -46,16 +46,16 @@ vectorstore = Pinecone(
 API_URL = "https://api-inference.huggingface.co/models/ahmed807762/gemma-2b-vetdataset-finetuned"
 headers = {"Authorization": "Bearer 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"}
 
-# API_URL1 = "https://api-inference.huggingface.co/models/ihanif/whisper-medium-urdu"
-# headers1 = {"Authorization": "Bearer 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"}
+API_URL1 = "https://api-inference.huggingface.co/models/ihanif/whisper-medium-urdu"
+headers1 = {"Authorization": "Bearer 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"}
 
 # Dedicated
-API_URL1 = "https://p8345i3xkcgeg28h.us-east-1.aws.endpoints.huggingface.cloud"
-headers1 = {
-	"Accept" : "application/json",
-	"Authorization": "Bearer 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",
-	"Content-Type": "audio/flac" 
-}
+# API_URL1 = "https://p8345i3xkcgeg28h.us-east-1.aws.endpoints.huggingface.cloud"
+# headers1 = {
+# 	"Accept" : "application/json",
+# 	"Authorization": "Bearer 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",
+# 	"Content-Type": "audio/flac" 
+# }
 
 
 app = Flask(__name__)
@@ -183,7 +183,7 @@ def chat():
         # "inputs": " question: " +prompttr_user+" answer: "
         # "inputs": sys_prompt+ " Here is some relevant context: "+concatenated_content+" question: " +prompttr_user+" Now generate answer: "
         output = query({                                
-            "inputs": sys_prompt+ " Here is some relevant context, "+concatenated_content+" question " +prompttr_user+" Now generate answer : ",
+            "inputs": sys_prompt+ " Here is some relevant context, "+concatenated_content+" question " +prompttr_user+" Now generate answer:-",
             "parameters": {"max_new_tokens": 250, "repetition_penalty": 7.0},
             "options": {"wait_for_model": True}
         })
@@ -194,9 +194,11 @@ def chat():
         print("Output from model: ", output)   
 
         # Use regex to find the text after the asterisk (*)
-        match = re.search(r':(.*)', output)
+        # match = re.search(r'\:\-(.*)', output)
+        match = re.search(r':-(.*)', output)
         
         if match:
+            # output = match.group(0)[1:]
             output = match.group(1)
             print("Response after asterisk:", output)
         
@@ -248,7 +250,7 @@ def load_models():
     while not translation_success:
         print("before sample query")
         # Make the sample audio query
-        audio_response = query1('user_audio/sampleaudio.wav')
+        audio_response = query1('user_audio/sampleaudio.flac')
         
         print("Gonna Try")
         
