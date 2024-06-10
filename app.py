@@ -203,10 +203,10 @@ def chat():
         # Use regex to find the text after the asterisk (*)
         # match = re.search(r'\:\-(.*)', output)
         # Using re.DOTALL to include newlines
-    	pattern = re.compile(r':-\s*(.*)', re.DOTALL)
+        pattern = re.compile(r':-\s*(.*)', re.DOTALL)
 
     	# Search for the pattern in the text
-	match = pattern.search(output)
+        match = pattern.search(output)
         
         if match:
             # output = match.group(0)[1:]
