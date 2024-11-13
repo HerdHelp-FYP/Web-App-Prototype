@@ -18,7 +18,7 @@ from langchain.vectorstores import Pinecone
 
 # RAG Setup
 pinecone.init(
-    api_key=os.environ.get('8827e1fc-4c19-46f2-97b9-c622b5488a3f') or '8827e1fc-4c19-46f2-97b9-c622b5488a3f',
+    api_key=os.environ.get('YOUR KEY') or 'YOUR KEY',
     environment=os.environ.get('gcp-starter') or 'gcp-starter'
 )
 
@@ -32,7 +32,7 @@ embed_model = HuggingFaceEmbeddings(
     encode_kwargs={'device': device, 'batch_size': 50}
 )
 
-index_name = 'herdhelp-rag'
+index_name = 'YOUR INDEX NAME'
 index = pinecone.Index(index_name)
 
 text_field = 'text'  # field in metadata that contains text content
@@ -49,7 +49,7 @@ vectorstore = Pinecone(
 API_URL = "https://sgug98576vup3s5p.us-east-1.aws.endpoints.huggingface.cloud"
 headers = {
 	"Accept" : "application/json",
-	"Authorization": "Bearer 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",
+	"Authorization": "Bearer `YOUR API`",
 	"Content-Type": "application/json" 
 }
 
@@ -60,7 +60,7 @@ headers = {
 API_URL1 = "https://p8345i3xkcgeg28h.us-east-1.aws.endpoints.huggingface.cloud"
 headers1 = {
 	"Accept" : "application/json",
-	"Authorization": "Bearer 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",
+	"Authorization": "Bearer `YOUR API`",
 	"Content-Type": "audio/flac" 
 }
 
